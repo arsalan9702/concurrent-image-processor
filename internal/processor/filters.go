@@ -2,6 +2,7 @@ package processor
 
 import (
 	"image"
+	"image/color"
 	"math"
 
 	"github.com/arsalan9702/concurrent-image-processor/internal/models"
@@ -152,7 +153,50 @@ func ImageToRGBA(img image.Image) *image.RGBA{
 	return rgba
 }
 
+func ExtractRowPixels(img *image.RGBA, row int) []uint8 {
+	bounds:= img.Bounds()
+	widht:=bounds.Dx()
 
+	if row<0 || row>=bounds.Dy(){
+		return nil
+	}
+
+	pixels:=make([]uint8 , widht*4)
+	y:=bounds.Min.Y + row
+
+	for x:=0; x<widht; x++{
+		c:=img.RGBAAt(bounds.Min.X+x, y)
+		idx:=x*4
+		pixels[idx]=c.R
+		pixels[idx+1]=c.G
+		pixels[idx+2]=c.B
+		pixels[idx+3]=c.A
+	}
+
+	return pixels
+}
+
+func SetRowPixels(img *image.RGBA, row int, pixels []uint8){
+	bounds:=img.Bounds()
+	width:=bounds.Dx()
+
+	if row<0 || row>=bounds.Dy() || len(pixels)!=width*	4{
+		return
+	}
+
+	y:=bounds.Min.Y+row
+
+	for x := 0; x < width; x++ {
+		idx := x * 4
+		c := color.RGBA{
+			R: pixels[idx],
+			G: pixels[idx+1],
+			B: pixels[idx+2],
+			A: pixels[idx+3],
+		}
+		img.SetRGBA(bounds.Min.X+x, y, c)
+	}
+}
 
 // clamp ensures value is within 0-255 range
 func clamp(value float64) float64 {
