@@ -14,11 +14,9 @@ import (
 	"golang.org/x/image/tiff"
 	"golang.org/x/image/webp"
 
-	_ "image/gif" // Import for gif support
+	
 	"image/jpeg"
-	_ "image/jpeg" // Import for jpeg support
 	"image/png"
-	_ "image/png"
 
 	"github.com/arsalan9702/concurrent-image-processor/internal/config"
 	"github.com/arsalan9702/concurrent-image-processor/internal/models"
@@ -34,13 +32,16 @@ type Processor struct {
 
 // create new processor instance
 func New(cfg *config.Config, log logger.Logger) (*Processor, error) {
-	workerPool := NewWorkerPool(cfg.Workers, cfg.BufferSize, log)
+	processor := &Processor{
+		config: cfg,
+		logger: log,
+	}
+	
+	// Pass the processor instance to the worker pool
+	workerPool := NewWorkerPool(cfg.Workers, cfg.BufferSize, log, processor)
+	processor.workerPool = workerPool
 
-	return &Processor{
-		config:     cfg,
-		workerPool: workerPool,
-		logger:     log,
-	}, nil
+	return processor, nil
 }
 
 // process multiple images concurrently
